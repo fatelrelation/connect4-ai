@@ -6,30 +6,23 @@ import java.util.Scanner;
 public class Connect4 {
 
 	public static void main(String args[]){
+		play();
+	}
+	
+	public static void play(){
 		int board[][] = new int[6][7];
 		int row = 0;
-		Scanner sc = new Scanner(System.in);
-		Random rn = new Random();
 		printBoard(board);
+		System.out.println();
 		while(checkResult(board) == 0 && isTableAvailable(board)){
-			int countWhile = 0;
-			do{
-				if(countWhile > 0){
-					System.out.println("Row not Available please try again.");
-				}
-				System.out.println("Enter row number(1-7) : ");
-				row = sc.nextInt() - 1;
-				countWhile++;
-			}while(!isRowAvailable(board, row));
+			row = playerChooseMove(board);
 			board = dropCoin(board, row,1);
 			printBoard(board);
 			System.out.println();
-			if(checkResult(board) != 0 && isTableAvailable(board))
+			if(checkResult(board) != 0 || !isTableAvailable(board))
 				break;
-//			do{
-//				row = rn.nextInt(7);
-//			}while(!isRowAvailable(board, row));
 			row = findMove(board);
+			System.out.println("Bot row number : "+(row+1));
 			board = dropCoin(board, row, -1);
 			printBoard(board);
 			System.out.println();
@@ -38,20 +31,38 @@ public class Connect4 {
 			System.out.println("Player win");
 		else if(checkResult(board) == -100)
 			System.out.println("Computer win");
-		else
+		else{
 			System.out.println("Draw");
+		}
+	}
+	
+	public static int playerChooseMove(int board[][]){
+		Scanner sc = new Scanner(System.in);
+		int countWhile = 0;
+		int row = 0;
+		do{
+			if(countWhile > 0){
+				System.out.println("Row not Available please try again.");
+			}
+			System.out.print("Enter row number(1-7) : ");
+			row = sc.nextInt() - 1;
+			countWhile++;
+		}while(!isRowAvailable(board, row));
+		return row;
 	}
 	
 	public static int findMove(int[][] board){
 		ArrayList<Integer> moves = new ArrayList<Integer>();
+		ArrayList<Integer> index = new ArrayList<Integer>();
 		int bestMove = 1000;
 		int move = -1;
 		int num = -1;
 		for(int j = 0 ; j < board[0].length ; j++){
 			if(isRowAvailable(board, j)){
 				board = dropCoin(board, j, -1);
-				move = minimax(board,0,1);
+				move = minimax(board,0,1,-9999,9999);
 				moves.add(move);
+				index.add(j);
 				System.out.print(move+" ");
 				board = removeCoin(board, j);
 				if(move < bestMove){
@@ -61,20 +72,24 @@ public class Connect4 {
 			}
 		}
 		System.out.println();
-		int count = 0;
+		//for random if moves have many best value**
+		int min = getMin(moves);
+		ArrayList<Integer> index2 = new ArrayList<Integer>();
 		for(int i = 0 ; i < moves.size() ; i++){
-			if(moves.get(i) == 0){
-				count++;
+			if(moves.get(i) == min){
+				index2.add(index.get(i));
 			}
 		}
-		if(count == moves.size()){
+		if(index2.size() > 1){
 			Random rd = new Random();
-			num = rd.nextInt(7);
+			do
+				num = index2.get(rd.nextInt(index2.size()));
+			while(!isRowAvailable(board, num));
 		}
 		return num;
 	}
 	
-	public static int minimax(int board[][],int depth, int player){
+	public static int minimax(int board[][],int depth, int player,int alpha,int beta){
 		int score = checkResult(board);
 		if(score == 100)
 			return score-depth;
@@ -82,7 +97,7 @@ public class Connect4 {
 			return score+depth;
 		if(!isTableAvailable(board))
 			return 0;
-		if(depth > 7)
+		if(depth > 9)
 			return 0;
 		
 		if(player == 1){
@@ -90,8 +105,11 @@ public class Connect4 {
 			for(int i = 0 ; i < board[0].length ; i++){
 				if(isRowAvailable(board, i)){
 					board = dropCoin(board, i, 1);
-					bestMax = Math.max(minimax(board,depth+1,-1), bestMax);
+					bestMax = Math.max(minimax(board,depth+1,-1,alpha,beta), bestMax);
 					board = removeCoin(board, i);
+					alpha = Math.max(alpha,bestMax);
+					if(beta <= alpha)
+						return bestMax;
 				}
 			}
 			return bestMax;
@@ -100,8 +118,11 @@ public class Connect4 {
 			for(int i = 0 ; i < board[0].length ; i++){
 				if(isRowAvailable(board, i)){
 					board = dropCoin(board, i, -1);
-					bestMin = Math.min(minimax(board,depth+1,1), bestMin);
+					bestMin = Math.min(minimax(board,depth+1,1,alpha,beta), bestMin);
 					board = removeCoin(board, i);
+					beta = Math.min(beta, bestMin);
+					if(beta <= alpha)
+						return bestMin;
 				}
 			}
 			return bestMin;
@@ -109,6 +130,8 @@ public class Connect4 {
 	}
 	
 	public static boolean isRowAvailable(int board[][],int row){
+		if(row < 0 || row >= board[0].length)
+			return false;
 		for(int i = 0 ; i < board.length ; i ++){
 			if(board[i][row] == 0)
 				return true;
@@ -118,7 +141,7 @@ public class Connect4 {
 	
 	public static boolean isTableAvailable(int board[][]){
 		for(int i = 0 ; i < board.length ; i++){
-			for(int j = 0 ; j < board.length ; j++){
+			for(int j = 0 ; j < board[i].length ; j++){
 				if(board[i][j] == 0)
 					return true;
 			}
@@ -223,5 +246,15 @@ public class Connect4 {
 			}
 			System.out.println();
 		}
+	}
+
+	public static int getMin(ArrayList<Integer> moves){
+		int min = Integer.MAX_VALUE;
+		for(int i = 0; i < moves.size() ; i++){
+			if(moves.get(i) < min){
+				min = moves.get(i);
+			}
+		}
+		return min;
 	}
 }
