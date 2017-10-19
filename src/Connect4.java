@@ -14,12 +14,12 @@ public class Connect4 {
 		int row = 0;
 		printBoard(board);
 		System.out.println();
-		while(checkResult(board) == 0 && isTableAvailable(board)){
+		while(checkResult(board) != 10000 && checkResult(board) != -10000 && isTableAvailable(board)){
 			row = playerChooseMove(board);
 			board = dropCoin(board, row,1);
 			printBoard(board);
 			System.out.println();
-			if(checkResult(board) != 0 || !isTableAvailable(board))
+			if(checkResult(board) == 10000 || checkResult(board) == -10000 || !isTableAvailable(board))
 				break;
 			row = findMove(board);
 			System.out.println("Bot row number : "+(row+1));
@@ -27,9 +27,9 @@ public class Connect4 {
 			printBoard(board);
 			System.out.println();
 		}
-		if(checkResult(board) == 100)
+		if(checkResult(board) == 10000)
 			System.out.println("Player win");
-		else if(checkResult(board) == -100)
+		else if(checkResult(board) == -10000)
 			System.out.println("Computer win");
 		else{
 			System.out.println("Draw");
@@ -60,7 +60,7 @@ public class Connect4 {
 		for(int j = 0 ; j < board[0].length ; j++){
 			if(isRowAvailable(board, j)){
 				board = dropCoin(board, j, -1);
-				move = minimax(board,0,1,-9999,9999);
+				move = minimax(board,0,1,Integer.MIN_VALUE,Integer.MAX_VALUE);
 				moves.add(move);
 				index.add(j);
 				System.out.print(move+" ");
@@ -91,17 +91,17 @@ public class Connect4 {
 	
 	public static int minimax(int board[][],int depth, int player,int alpha,int beta){
 		int score = checkResult(board);
-		if(score == 100)
-			return score-depth;
-		if(score == -100)
-			return score+depth;
+		if(score == 10000)
+			return score - depth;
+		if(score == -10000)
+			return score + depth;
 		if(!isTableAvailable(board))
 			return 0;
 		if(depth > 9)
-			return 0;
+			return score;
 		
 		if(player == 1){
-			int bestMax = -1000;
+			int bestMax = Integer.MIN_VALUE;
 			for(int i = 0 ; i < board[0].length ; i++){
 				if(isRowAvailable(board, i)){
 					board = dropCoin(board, i, 1);
@@ -114,7 +114,7 @@ public class Connect4 {
 			}
 			return bestMax;
 		}else {
-			int bestMin = 1000;
+			int bestMin = Integer.MAX_VALUE;
 			for(int i = 0 ; i < board[0].length ; i++){
 				if(isRowAvailable(board, i)){
 					board = dropCoin(board, i, -1);
@@ -170,18 +170,33 @@ public class Connect4 {
 	}
 	
 	public static int checkResult(int[][] board){
+		int point = 0;
 		//vertical check
 		for(int i = 0 ; i < board.length - 3 ; i++){
 			for(int j = 0 ; j < board[i].length ; j++){
 				//check for player
 				if(board[i][j] == board[i+1][j] && board[i][j] == board[i+2][j] && board[i][j] == board[i+3][j] &&
 				   board[i][j] == 1){
-					return 100;
+					return 10000;
 				}
+				else if(board[i][j] == board[i+1][j] && board[i][j] == board[i+2][j] && board[i][j] == 1){
+					point += 100;
+				}
+				else if(board[i][j] == board[i+1][j] && board[i][j] == 1){
+					point += 50;
+				}
+				
+				
 				//check for computer
 				if(board[i][j] == board[i+1][j] && board[i][j] == board[i+2][j] && board[i][j] == board[i+3][j] &&
 				   board[i][j] == -1){
-					return -100;
+					return -10000;
+				}
+				else if(board[i][j] == board[i+1][j] && board[i][j] == board[i+2][j] && board[i][j] == -1){
+					point -= 100;
+				}
+				else if(board[i][j] == board[i+1][j] && board[i][j] == -1){
+					point -= 50;
 				}
 			}
 		}
@@ -191,12 +206,24 @@ public class Connect4 {
 				//check for player
 				if(board[i][j] == board[i][j+1] && board[i][j] == board[i][j+2] && board[i][j] == board[i][j+3] &&
 				   board[i][j] == 1){
-					return 100;
+					return 10000;
+				}
+				else if(board[i][j] == board[i][j+1] && board[i][j] == board[i][j+2] && board[i][j] == 1){
+					point += 100;
+				}
+				else if(board[i][j] == board[i][j+1] && board[i][j] == 1){
+					point += 50;
 				}
 				//check for computer
 				if(board[i][j] == board[i][j+1] && board[i][j] == board[i][j+2] && board[i][j] == board[i][j+3] &&
 				   board[i][j] == -1){
-					return -100;
+					return -10000;
+				}
+				else if(board[i][j] == board[i][j+1] && board[i][j] == board[i][j+2] && board[i][j] == -1){
+					point -= 100;
+				}
+				else if(board[i][j] == board[i][j+1] && board[i][j] == -1){
+					point -= 50;
 				}
 			}
 		}
@@ -206,12 +233,24 @@ public class Connect4 {
 				//check for player
 				if(board[i][j] == board[i+1][j+1] && board[i][j] == board[i+2][j+2] && board[i][j] == board[i+3][j+3] &&
 				   board[i][j] == 1){
-					return 100;
+					return 10000;
+				}
+				else if(board[i][j] == board[i+1][j+1] && board[i][j] == board[i+2][j+2] && board[i][j] == 1){
+					point += 100;
+				}
+				else if(board[i][j] == board[i+1][j+1] && board[i][j] == 1){
+					point += 50;
 				}
 				//check for computer
 				if(board[i][j] == board[i+1][j+1] && board[i][j] == board[i+2][j+2] && board[i][j] == board[i+3][j+3] &&
 				   board[i][j] == -1){
-					return -100;
+					return -10000;
+				}
+				else if(board[i][j] == board[i+1][j+1] && board[i][j] == board[i+2][j+2] && board[i][j] == -1){
+					point -= 100;
+				}
+				else if(board[i][j] == board[i+1][j+1] && board[i][j] == -1){
+					point -= 50;
 				}
 			}
 		}
@@ -221,16 +260,28 @@ public class Connect4 {
 				//check for player
 				if(board[i][j] == board[i+1][j-1] && board[i][j] == board[i+2][j-2] && board[i][j] == board[i+3][j-3] &&
 				   board[i][j] == 1){
-					return 100;
+					return 10000;
+				}
+				else if(board[i][j] == board[i+1][j-1] && board[i][j] == board[i+2][j-2] && board[i][j] == 1){
+					point += 100;
+				}
+				else if(board[i][j] == board[i+1][j-1] && board[i][j] == 1){
+					point += 50;
 				}
 				//check for computer
 				if(board[i][j] == board[i+1][j-1] && board[i][j] == board[i+2][j-2] && board[i][j] == board[i+3][j-3] &&
 				   board[i][j] == -1){
-					return -100;
+					return -10000;
+				}
+				else if(board[i][j] == board[i+1][j-1] && board[i][j] == board[i+2][j-2] && board[i][j] == -1){
+					point -= 100;
+				}
+				else if(board[i][j] == board[i+1][j-1] && board[i][j] == -1){
+					point -= 50;
 				}
 			}
 		}
-		return 0;
+		return point;
 	}
 	
 	public static void printBoard(int[][] board){
