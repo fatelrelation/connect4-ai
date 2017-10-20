@@ -54,7 +54,7 @@ public class Connect4 {
 	public static int findMove(int[][] board){
 		ArrayList<Integer> moves = new ArrayList<Integer>();
 		ArrayList<Integer> index = new ArrayList<Integer>();
-		int bestMove = 1000;
+		int bestMove = Integer.MAX_VALUE;
 		int move = -1;
 		int num = -1;
 		for(int j = 0 ; j < board[0].length ; j++){
@@ -97,7 +97,7 @@ public class Connect4 {
 			return score + depth;
 		if(!isTableAvailable(board))
 			return 0;
-		if(depth > 9)
+		if(depth > 8)
 			return score;
 		
 		if(player == 1){
